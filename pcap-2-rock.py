@@ -10,9 +10,9 @@ import time
 
 
 def set_logging():
-    # Set logging level. Send all logs to ../data/sw2res.log
+    # Set logging level. Log to directory script was run from as __file__.stderr
     logging_level = logging.INFO  # Modify if you just want to focus on errors
-    logging.basicConfig(filename='%s.stderr' % os.path.dirname(sys.argv[0]),
+    logging.basicConfig(filename='%s/%s.stderr' % (os.path.dirname(os.path.abspath(__file__)), os.path.basename(__file__)),
                         level=logging_level,
                         format='%(asctime)s %(levelname)-8s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S',
@@ -75,9 +75,24 @@ def get_bro_executable():
         bro_location = subprocess.check_output(shlex.split('which bro'))
         return bro_location
     except subprocess.CalledProcessError as e:
-        print 'Could not locate bro executable'
-        print e
-        exit(1)
+        # see if it is in the default rock location
+        location = '/opt/bro/bin/bro'
+        if os.path.isfile(location) and os.access(location, os.X_OK):
+            return location
+        # Attempt to use the find command to locate bro executible
+        else:
+            try:
+                possible_locations = subprocess.check_output(shlex.split('find / -name bro'))
+                for location in possible_locations.split():
+                    if os.path.isfile(location) and os.access(location, os.X_OK):
+                        return location
+                print 'Could not locate bro executable with "which" or "find", perhaps add it to your path'
+                exit(1)
+            except subprocess.CalledProcessError as er:
+                print 'Could not locate bro executable, perhaps add it to your path'
+                print e
+                print er
+                exit(1)
 
 
 def run_bro_replay(pcap, bro_path):
@@ -88,13 +103,13 @@ def run_bro_replay(pcap, bro_path):
         subprocess.call(shlex.split(command), stdout=subprocess.PIPE)
     except Exception:
         print 'Failed to process %s' % pcap
-        print 'See %s.stderr for more details' % os.path.dirname(sys.argv[0])
+        print 'See %s.stderr for more details' % os.path.dirname(os.path.abspath(__file__))
         logging.error('Failed to process %s\n%s', pcap, traceback.format_exc())
 
 
 def main():
     # make sure we are working in the directory of the python executable
-    os.chdir(os.path.dirname(sys.argv[0]))
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     # get arguments
     args = get_args()
 
