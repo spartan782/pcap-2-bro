@@ -1,6 +1,7 @@
 # pcap-2-bro
 Replay PCAP through a rock sensor
 
+### Command Line Options
 * -w --workers # (number of threads to allocate to pool)
 * -d --directory /path/to/dir (top directory if using the -r option or directory that contains Pcap files)
 * -r --recursive (if you have multiple pcaps in layered directories)
