@@ -1,3 +1,5 @@
+from functools import partial
+
 import subprocess
 import argparse
 import multiprocessing
@@ -134,7 +136,7 @@ def main():
     pool = multiprocessing.Pool(processes=workers)
 
     # map the fuction and send the data needed for the function
-    result = pool.map_async(run_bro_replay, (pcap_list, bro_path))
+    result = pool.map_async(partial(run_bro_replay, bro_path=bro_path), pcap_list)
     if args.verbose:
         while not result.ready():
             print 'Pcap Left to Process: %s' % result._number_left
