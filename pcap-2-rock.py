@@ -103,8 +103,10 @@ def get_bro_executable():
                 exit(1)
 
 
-def run_bro_replay(pcap, bro_path, source):
+def run_bro_replay(pcap, args):
     try:
+        bro_path = args[0]
+        source = args[1]
         # Bro command to replay pcap
         command = '{} -C -r {} local "ROCK::sensor_id={}"'.format(bro_path, pcap, source)
         # Run the command
@@ -143,7 +145,8 @@ def main():
         pool = multiprocessing.Pool(processes=workers)
 
         # map the fuction and send the data needed for the function
-        result = pool.map_async(partial(run_bro_replay, bro_path=bro_path, source=args.source), pcap_list)
+        result = pool.map_async(partial(run_bro_replay, args=[bro_path, args.source]), pcap_list)
+        result = pool.map_async(helper())
         if args.verbose:
             while not result.ready():
                 print 'Pcap Left to Process: {}'.format(result._number_left)
