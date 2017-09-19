@@ -116,11 +116,11 @@ def run_bro_replay(pcap, bro_path, source):
 
 
 def main():
+    # get arguments
+    args = get_args()
     try:
         # make sure we are working in the directory of the python executable
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
-        # get arguments
-        args = get_args()
 
         if args.directory:
             if args.recursive:
@@ -153,7 +153,7 @@ def main():
         print 'Pcap processed. ROCK::sensor_id={}'.format(args.source)
     # Catch and log any unexpected errors
     except:
-        logging.error('An unexpected Error occurred.\nIf you believe this to be a bug please open an 
-                      issue at https://github.com/spartan782/pcap-2-bro.git\n{}'.format(traceback.format_exc()))
+        logging.error('An unexpected Error occurred.\nIf you believe this to be a bug please open an '
+                      'issue at https://github.com/spartan782/pcap-2-bro.git\n{}'.format(traceback.format_exc()))
 
 main()
