@@ -14,44 +14,54 @@ import time
 
 def set_logging():
     # Set logging level. Log to directory script was run from as __file__.stderr
-    logging_level = logging.INFO  # Modify if you just want to focus on errors
+    logging_level = logging.INFO
     logging.basicConfig(filename='{}/{}.stderr'.format(
         os.path.dirname(os.path.abspath(__file__)), os.path.splitext(os.path.basename(os.path.abspath(__file__)))[0]),
         level=logging_level,
-        format='%(asctime) - %(levelname)8s: %(message)',
+        format='%(asctime)s %(levelname)-8s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
         stream=sys.stdout)
 
 
 def get_pcap_files_recursive(top_dir):
     pcap_files = []
-    for root, dirs, files in os.walk(top_dir):
-        for file_name in files:
-            pcap_files.append('{}{}'.format(root, file_name))
-    if pcap_files:
-        return pcap_files
-    else:
+    try:
+        for root, dirs, files in os.walk(top_dir):
+            for file_name in files:
+                pcap_files.append('{}{}'.format(root, file_name))
+        if pcap_files:
+            return pcap_files
+        else:
+            raise ValueError
+    except ValueError:
         print 'No files exist in {}'.format(top_dir)
         exit(1)
 
 
+
 def get_pcap_files(directory):
 
-    pcap_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
-    if pcap_files:
-        return pcap_files
-    else:
+    try:
+        pcap_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+        if pcap_files:
+            return pcap_files
+        else:
+            raise ValueError
+    except ValueError:
         print 'No files exist in {}'.format(directory)
         exit(1)
 
 
 def get_pcap_file(file_name):
-    file_path = os.path.abspath(file_name)
-    result = os.path.isfile(file_path)
-    if result:
-        pcap_files = [file_path]
-        return pcap_files
-    else:
+    try:
+        file_path = os.path.abspath(file_name)
+        result = os.path.isfile(file_path)
+        if result:
+            pcap_files = [file_path]
+            return pcap_files
+        else:
+            raise ValueError
+    except ValueError:
         print '{} Is not a File'.format(file_path)
         exit(1)
 
@@ -120,43 +130,39 @@ def run_bro_replay(pcap, args):
 def main():
     # get arguments
     args = get_args()
-    try:
-        # make sure we are working in the directory of the python executable
-        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    set_logging()
+    # make sure we are working in the directory of the python executable
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-        if args.directory:
-            if args.recursive:
-                # get a list of all possible pcap files in directory and sub directories
-                pcap_list = get_pcap_files_recursive(args.directory)
-            else:
-                # get a list of all possible pcap files in directory
-                pcap_list = get_pcap_files(args.directory)
+    if args.directory:
+        if args.recursive:
+            # get a list of all possible pcap files in directory and sub directories
+            pcap_list = get_pcap_files_recursive(args.directory)
         else:
-            # get absolute path to single pcap file
-            pcap_list = get_pcap_file(args.file)
+            # get a list of all possible pcap files in directory
+            pcap_list = get_pcap_files(args.directory)
+    else:
+        # get absolute path to single pcap file
+        pcap_list = get_pcap_file(args.file)
 
-        # locate the bro executable
-        bro_path = get_bro_executable()
+    # locate the bro executable
+    bro_path = get_bro_executable()
 
-        # the number of threads to enable
-        workers = args.workers
+    # the number of threads to enable
+    workers = args.workers
 
-        # assigning the workers to a pool
-        pool = multiprocessing.Pool(processes=workers)
+    # assigning the workers to a pool
+    pool = multiprocessing.Pool(processes=workers)
 
-        # map the fuction and send the data needed for the function
-        result = pool.map_async(partial(run_bro_replay, args=[bro_path, args.source]), pcap_list)
-        result = pool.map_async(helper())
-        if args.verbose:
-            while not result.ready():
-                print 'Pcap Left to Process: {}'.format(result._number_left)
-                time.sleep(10)
-        pool.close()
-        pool.join()
-        print 'Pcap processed. ROCK::sensor_id={}'.format(args.source)
-    # Catch and log any unexpected errors
-    except:
-        logging.error('An unexpected Error occurred.\nIf you believe this to be a bug please open an '
-                      'issue at https://github.com/spartan782/pcap-2-bro.git\n{}'.format(traceback.format_exc()))
+    # map the fuction and send the data needed for the function
+    result = pool.map_async(partial(run_bro_replay, args=[bro_path, args.source]), pcap_list)
+    result = pool.map_async(helper())
+    if args.verbose:
+        while not result.ready():
+            print 'Pcap Left to Process: {}'.format(result._number_left)
+            time.sleep(10)
+    pool.close()
+    pool.join()
+    print 'Pcap processed. ROCK::sensor_id={}'.format(args.source)
 
 main()
