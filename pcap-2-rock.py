@@ -18,8 +18,8 @@ def set_logging():
     logging.basicConfig(filename='{}/{}.stderr'.format(
         os.path.dirname(os.path.abspath(__file__)), os.path.splitext(os.path.basename(os.path.abspath(__file__)))[0]),
         level=logging_level,
-        format='{asctime} - {levelname:8s}: {message}',
-        datefmt='{Y}-{m}-{d} {H}:{M}:{S}',
+        format='%(asctime) - %(levelname)8s: %(message)',
+        datefmt='%Y-%m-%d %H:%M:%S',
         stream=sys.stdout)
 
 
