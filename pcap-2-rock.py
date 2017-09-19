@@ -64,7 +64,7 @@ def get_args():
     parser.add_argument('-v', '--verbose', action="store_true", help='Enable Verbose output', default=False)
     parser.add_argument('-f', '--file', help='process a single Pcap file')
     parser.add_argument('-w', '--workers', type=int, help='Number of Parallel workers to process pcap', default=1)
-    parser.add_argument('-s', '--source', type=int, help='Used to supply the ROCK::sensor_id variable', default=uuid4())
+    parser.add_argument('-s', '--source', help='Used to supply the ROCK::sensor_id variable', default=uuid4())
 
     args = parser.parse_args()
 
@@ -116,40 +116,44 @@ def run_bro_replay(pcap, bro_path, source):
 
 
 def main():
-    # make sure we are working in the directory of the python executable
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    # get arguments
-    args = get_args()
+    try:
+        # make sure we are working in the directory of the python executable
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        # get arguments
+        args = get_args()
 
-    if args.directory:
-        if args.recursive:
-            # get a list of all possible pcap files in directory and sub directories
-            pcap_list = get_pcap_files_recursive(args.directory)
+        if args.directory:
+            if args.recursive:
+                # get a list of all possible pcap files in directory and sub directories
+                pcap_list = get_pcap_files_recursive(args.directory)
+            else:
+                # get a list of all possible pcap files in directory
+                pcap_list = get_pcap_files(args.directory)
         else:
-            # get a list of all possible pcap files in directory
-            pcap_list = get_pcap_files(args.directory)
-    else:
-        # get absolute path to single pcap file
-        pcap_list = get_pcap_file(args.file)
+            # get absolute path to single pcap file
+            pcap_list = get_pcap_file(args.file)
 
-    # locate the bro executable
-    bro_path = get_bro_executable()
+        # locate the bro executable
+        bro_path = get_bro_executable()
 
-    # the number of threads to enable
-    workers = args.workers
+        # the number of threads to enable
+        workers = args.workers
 
-    # assigning the workers to a pool
-    pool = multiprocessing.Pool(processes=workers)
+        # assigning the workers to a pool
+        pool = multiprocessing.Pool(processes=workers)
 
-    # map the fuction and send the data needed for the function
-    result = pool.map_async(partial(run_bro_replay, bro_path=bro_path, source=args.source), pcap_list)
-    if args.verbose:
-        while not result.ready():
-            print 'Pcap Left to Process: {}'.format(result._number_left)
-            time.sleep(10)
-    pool.close()
-    pool.join()
-    print 'Pcap processed. Rock'
-
+        # map the fuction and send the data needed for the function
+        result = pool.map_async(partial(run_bro_replay, bro_path=bro_path, source=args.source), pcap_list)
+        if args.verbose:
+            while not result.ready():
+                print 'Pcap Left to Process: {}'.format(result._number_left)
+                time.sleep(10)
+        pool.close()
+        pool.join()
+        print 'Pcap processed. ROCK::sensor_id={}'.format(args.source)
+    # Catch and log any unexpected errors
+    except:
+        logging.error('An unexpected Error occurred.\nIf you believe this to be a bug please open an 
+                      issue at https://github.com/spartan782/pcap-2-bro.git\n{}'.format(traceback.format_exc()))
 
 main()
