@@ -118,9 +118,9 @@ def run_bro_replay(pcap, args):
         bro_path = args[0]
         source = args[1]
         # Bro command to replay pcap
-        command = '{} -C -r {} local "ROCK::sensor_id={}"'.format(bro_path, pcap, source)
+        command = r'{} -C -r {} local "ROCK::sensor_id={}"'.format(bro_path, pcap, source)
         # Run the command
-        subprocess.call(shlex.split(command), stdout=subprocess.PIPE)
+        subprocess.call(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     except Exception:
         print 'Failed to process {}'.format(pcap)
         print 'See {}.stderr for more details'.format(os.path.splitext(__file__)[0])
@@ -156,7 +156,6 @@ def main():
 
     # map the fuction and send the data needed for the function
     result = pool.map_async(partial(run_bro_replay, args=[bro_path, args.source]), pcap_list)
-    result = pool.map_async(helper())
     if args.verbose:
         while not result.ready():
             print 'Pcap Left to Process: {}'.format(result._number_left)
