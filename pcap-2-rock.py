@@ -90,13 +90,14 @@ def get_args():
 
 def get_bro_executable():
     try:
-        bro_location = subprocess.check_output(shlex.split('which bro'))
-        return bro_location
-    except subprocess.CalledProcessError as e:
         # see if it is in the default rock location
         location = '/opt/bro/bin/bro'
         if os.path.isfile(location) and os.access(location, os.X_OK):
             return location
+        bro_location = subprocess.check_output(shlex.split('which bro'))
+        return bro_location
+    except subprocess.CalledProcessError as e:
+
         # Attempt to use the find command to locate bro executible
         else:
             try:
