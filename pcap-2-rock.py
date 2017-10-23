@@ -128,7 +128,7 @@ def run_bro_replay(pcap, args):
         logging.error('Failed to process {}\n{}'.format(pcap, traceback.format_exc()))
 
 
-def main():
+def run():
     # get arguments
     args = get_args()
     set_logging()
@@ -165,4 +165,6 @@ def main():
     pool.join()
     print 'Pcap processed. ROCK::sensor_id={}'.format(args.source)
 
-main()
+
+if __name__ = '__main__':
+    run()
