@@ -1,5 +1,6 @@
 from functools import partial
 from uuid import uuid4
+from tempfile import mkdtemp
 
 import subprocess
 import argparse
@@ -40,7 +41,6 @@ def get_pcap_files_recursive(top_dir):
 
 
 def get_pcap_files(directory):
-
     try:
         pcap_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
         if pcap_files:
@@ -118,6 +118,9 @@ def run_bro_replay(pcap, args):
     try:
         bro_path = args[0]
         source = args[1]
+        # move into temp directory to process so that the bro.logs are not scattered in the script directory
+        temp_dir = mkdtemp()
+        os.chdir(temp_dir)
         # Bro command to replay pcap
         command = r'{} -C -r {} local "ROCK::sensor_id={}"'.format(bro_path, pcap, source)
         # Run the command
