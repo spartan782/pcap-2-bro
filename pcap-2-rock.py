@@ -1,3 +1,8 @@
+from __future__ import absolute_import, division, print_function
+from builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                      int, map, next, oct, open, pow, range, round,
+                      str, super, zip)
+
 from functools import partial
 from uuid import uuid4
 from tempfile import mkdtemp
@@ -35,7 +40,7 @@ def get_pcap_files_recursive(top_dir):
         else:
             raise ValueError
     except ValueError:
-        print 'No files exist in {}'.format(top_dir)
+        print('No files exist in {}'.format(top_dir))
         exit(1)
 
 
@@ -48,7 +53,7 @@ def get_pcap_files(directory):
         else:
             raise ValueError
     except ValueError:
-        print 'No files exist in {}'.format(directory)
+        print('No files exist in {}'.format(directory))
         exit(1)
 
 
@@ -62,7 +67,7 @@ def get_pcap_file(file_name):
         else:
             raise ValueError
     except ValueError:
-        print '{} Is not a File'.format(file_path)
+        print('{} Is not a File'.format(file_path))
         exit(1)
 
 
@@ -102,12 +107,12 @@ def get_bro_executable(bro_path):
             if bro_path:
                 return bro_path
             else:
-                print 'Could not locate bro executable, perhaps add it to your path or use the --bro_path option'
+                print('Could not locate bro executable, perhaps add it to your path or use the --bro_path option')
                 exit(1)
     except subprocess.CalledProcessError as e:
 
         # Attempt to use the find command to locate bro executible
-        print 'Could not locate bro executable, perhaps add it to your path or use the --bro_path option'
+        print('Could not locate bro executable, perhaps add it to your path or use the --bro_path option')
         exit(1)
 
 
@@ -123,8 +128,8 @@ def run_bro_replay(pcap, args):
         # Run the command
         subprocess.call(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     except Exception:
-        print 'Failed to process {}'.format(pcap)
-        print 'See {}.stderr for more details'.format(os.path.splitext(__file__)[0])
+        print('Failed to process {}'.format(pcap))
+        print('See {}.stderr for more details'.format(os.path.splitext(__file__)[0]))
         logging.error('Failed to process {}\n{}'.format(pcap, traceback.format_exc()))
 
 
@@ -159,11 +164,11 @@ def run():
     result = pool.map_async(partial(run_bro_replay, args=[bro_path, args.source]), pcap_list)
     if args.verbose:
         while not result.ready():
-            print 'Pcap Left to Process: {}'.format(result._number_left)
+            print('Pcap Left to Process: {}'.format(result._number_left))
             time.sleep(10)
     pool.close()
     pool.join()
-    print 'Pcap processed. ROCK::sensor_id={}'.format(args.source)
+    print('Pcap processed. ROCK::sensor_id={}'.format(args.source))
 
 
 if __name__ == '__main__':
