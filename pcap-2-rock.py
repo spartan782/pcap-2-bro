@@ -75,7 +75,7 @@ def get_args():
     parser.add_argument('-f', '--file', help='process a single Pcap file')
     parser.add_argument('-w', '--workers', type=int, help='Number of Parallel workers to process pcap', default=1)
     parser.add_argument('-s', '--source', help='Used to supply the ROCK::sensor_id variable', default=uuid4())
-
+    parser.add_argument('-b', '--bro_path', help='Path to Bro executable', default='/usr/bin/bro')
     args = parser.parse_args()
 
     # Check for Conflicting options
@@ -88,30 +88,27 @@ def get_args():
     return args
 
 
-def get_bro_executable():
+def get_bro_executable(bro_path):
     try:
         # see if it is in the default rock location
-        location = '/opt/bro/bin/bro'
-        if os.path.isfile(location) and os.access(location, os.X_OK):
-            return location
-        bro_location = subprocess.check_output(shlex.split('which bro'))
-        return bro_location
+        if bro_path:
+            if os.path.isfile(bro_path) and os.access(bro_path, os.X_OK):
+                return bro_path
+            else:
+                print('{} is either not a file or executable'.format(bro_path))
+                exit(1)
+        else:
+            bro_path = subprocess.check_output(shlex.split('which bro'))
+            if bro_path:
+                return bro_path
+            else:
+                print 'Could not locate bro executable, perhaps add it to your path or use the --bro_path option'
+                exit(1)
     except subprocess.CalledProcessError as e:
 
         # Attempt to use the find command to locate bro executible
-        else:
-            try:
-                possible_locations = subprocess.check_output(shlex.split('find / -name bro'))
-                for location in possible_locations.split():
-                    if os.path.isfile(location) and os.access(location, os.X_OK):
-                        return location
-                print 'Could not locate bro executable with "which" or "find", perhaps add it to your path'
-                exit(1)
-            except subprocess.CalledProcessError as er:
-                print 'Could not locate bro executable, perhaps add it to your path'
-                print e
-                print er
-                exit(1)
+        print 'Could not locate bro executable, perhaps add it to your path or use the --bro_path option'
+        exit(1)
 
 
 def run_bro_replay(pcap, args):
@@ -169,5 +166,5 @@ def run():
     print 'Pcap processed. ROCK::sensor_id={}'.format(args.source)
 
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     run()
