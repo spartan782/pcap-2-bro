@@ -152,7 +152,7 @@ def run():
         pcap_list = get_pcap_file(args.file)
 
     # locate the bro executable
-    bro_path = get_bro_executable()
+    bro_path = get_bro_executable(args.bro_path)
 
     # the number of threads to enable
     workers = args.workers
